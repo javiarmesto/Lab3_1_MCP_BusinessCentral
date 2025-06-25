@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Basic MCP Server",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\Activate.ps1 && mcp dev server.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Campaign Analytics MCP",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\Activate.ps1 && mcp dev OutboundTools.py",
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Business Central MCP",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\Activate.ps1 && mcp dev BusinessCentralMCP.py",
+      "problemMatcher": []
+    }
+  ]
+}

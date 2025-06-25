@@ -1,0 +1,8 @@
+# Dependencias del proyecto
+fastmcp
+httpx
+pydantic
+fastapi
+uvicorn
+python-dotenv
+
