@@ -205,6 +205,103 @@ async def http_get_orders(limit: int = Query(5, ge=1, le=100), request: Request 
         logger.exception("Error en GET /orders")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/mcp")
+async def mcp_proxy(request: Request):
+    """
+    Endpoint MCP avanzado: maneja solicitudes JSON-RPC para tools/list y tools/call.
+    Compatible con Copilot Studio y clientes MCP.
+    """
+    try:
+        body = await request.json()
+        method = body.get("method")
+        logger.info(f"POST /mcp método: {method} desde {request.client.host if request else 'N/A'}")
+        
+        # Manejar tools/list
+        if method == "tools/list":
+            return {
+                "jsonrpc": "2.0",
+                "result": {
+                    "tools": [
+                        {"name": "get_customers", "description": "Lista clientes de Business Central"},
+                        {"name": "get_customer_details", "description": "Muestra detalles de un cliente por ID"},
+                        {"name": "get_items", "description": "Lista artículos de Business Central"},
+                        {"name": "get_sales_orders", "description": "Lista órdenes de venta de Business Central"},
+                        {"name": "create_customer", "description": "Crea un nuevo cliente en Business Central"}
+                    ]
+                },
+                "id": body.get("id")
+            }
+        
+        # Manejar tools/call
+        elif method == "tools/call":
+            params = body.get("params", {})
+            tool_name = params.get("name")
+            arguments = params.get("arguments", {})
+            
+            # Ejecutar la herramienta correspondiente
+            if tool_name == "get_customers":
+                limit = arguments.get("limit", 10)
+                data = await bc_client.get_customers(top=limit)
+                return {
+                    "jsonrpc": "2.0",
+                    "result": {"content": [{"type": "text", "text": str(data)}]},
+                    "id": body.get("id")
+                }
+            elif tool_name == "get_items":
+                limit = arguments.get("limit", 10)
+                data = await bc_client.get_items(top=limit)
+                return {
+                    "jsonrpc": "2.0",
+                    "result": {"content": [{"type": "text", "text": str(data)}]},
+                    "id": body.get("id")
+                }
+            elif tool_name == "get_sales_orders":
+                limit = arguments.get("limit", 5)
+                data = await bc_client.get_orders(top=limit)
+                return {
+                    "jsonrpc": "2.0",
+                    "result": {"content": [{"type": "text", "text": str(data)}]},
+                    "id": body.get("id")
+                }
+            elif tool_name == "get_customer_details":
+                customer_id = arguments.get("customer_id")
+                if not customer_id:
+                    raise HTTPException(status_code=400, detail="customer_id requerido")
+                data = await bc_client.get_customer(customer_id)
+                return {
+                    "jsonrpc": "2.0",
+                    "result": {"content": [{"type": "text", "text": str(data)}]},
+                    "id": body.get("id")
+                }
+            elif tool_name == "create_customer":
+                data = await bc_client.create_customer(arguments)
+                return {
+                    "jsonrpc": "2.0",
+                    "result": {"content": [{"type": "text", "text": str(data)}]},
+                    "id": body.get("id")
+                }
+            else:
+                return {
+                    "jsonrpc": "2.0",
+                    "error": {"code": -32601, "message": f"Herramienta no encontrada: {tool_name}"},
+                    "id": body.get("id")
+                }
+        
+        else:
+            return {
+                "jsonrpc": "2.0",
+                "error": {"code": -32601, "message": f"Método no soportado: {method}"},
+                "id": body.get("id")
+            }
+            
+    except Exception as e:
+        logger.exception("Error en endpoint MCP")
+        return {
+            "jsonrpc": "2.0",
+            "error": {"code": -32603, "message": f"Error interno: {str(e)}"},
+            "id": body.get("id") if hasattr(body, 'get') else "unknown"
+        }
+
 @app.get("/health")
 def health_check(request: Request = None):
     """Chequeo de salud del servicio."""
