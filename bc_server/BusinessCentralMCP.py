@@ -36,8 +36,25 @@ from mcp.server.fastmcp import FastMCP
 from bc_server.config import config
 from bc_server.client import bc_client
 
+
 # Inicializar servidor MCP
 mcp = FastMCP("BusinessCentral")
+
+# Handler para tools/list (descubrimiento automático de herramientas)
+@mcp.method("tools/list")
+async def list_tools():
+    """
+    Devuelve la lista de herramientas MCP disponibles para discovery automático.
+    """
+    return {
+        "tools": [
+            {"name": "get_customers", "description": "Lista clientes de Business Central"},
+            {"name": "get_customer_details", "description": "Muestra detalles de un cliente por ID"},
+            {"name": "get_items", "description": "Lista artículos de Business Central"},
+            {"name": "get_sales_orders", "description": "Lista órdenes de venta de Business Central"},
+            {"name": "create_customer", "description": "Crea un nuevo cliente en Business Central"}
+        ]
+    }
 
 @mcp.tool()
 async def get_customers(limit: int = 10):
