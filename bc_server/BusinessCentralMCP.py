@@ -45,14 +45,101 @@ mcp = FastMCP("BusinessCentral")
 async def list_tools():
     """
     Devuelve la lista de herramientas MCP disponibles para discovery automático.
+    Incluye inputSchema para compatibilidad con Copilot Studio.
     """
     return {
         "tools": [
-            {"name": "get_customers", "description": "Lista clientes de Business Central"},
-            {"name": "get_customer_details", "description": "Muestra detalles de un cliente por ID"},
-            {"name": "get_items", "description": "Lista artículos de Business Central"},
-            {"name": "get_sales_orders", "description": "Lista órdenes de venta de Business Central"},
-            {"name": "create_customer", "description": "Crea un nuevo cliente en Business Central"}
+            {
+                "name": "get_customers", 
+                "description": "Lista clientes de Business Central",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "limit": {
+                            "type": "integer",
+                            "description": "Número máximo de clientes a retornar",
+                            "default": 10
+                        }
+                    }
+                }
+            },
+            {
+                "name": "get_customer_details", 
+                "description": "Muestra detalles de un cliente por ID",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "customer_id": {
+                            "type": "string",
+                            "description": "ID único del cliente en Business Central"
+                        }
+                    },
+                    "required": ["customer_id"]
+                }
+            },
+            {
+                "name": "get_items", 
+                "description": "Lista artículos de Business Central",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "limit": {
+                            "type": "integer",
+                            "description": "Número máximo de artículos a retornar",
+                            "default": 10
+                        }
+                    }
+                }
+            },
+            {
+                "name": "get_sales_orders", 
+                "description": "Lista órdenes de venta de Business Central",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "limit": {
+                            "type": "integer",
+                            "description": "Número máximo de órdenes a retornar",
+                            "default": 5
+                        }
+                    }
+                }
+            },
+            {
+                "name": "create_customer", 
+                "description": "Crea un nuevo cliente en Business Central",
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "displayName": {
+                            "type": "string",
+                            "description": "Nombre del cliente"
+                        },
+                        "type": {
+                            "type": "string",
+                            "description": "Tipo de cliente",
+                            "default": "Company"
+                        },
+                        "addressLine1": {
+                            "type": "string",
+                            "description": "Dirección principal"
+                        },
+                        "city": {
+                            "type": "string",
+                            "description": "Ciudad"
+                        },
+                        "email": {
+                            "type": "string",
+                            "description": "Correo electrónico"
+                        },
+                        "phoneNumber": {
+                            "type": "string",
+                            "description": "Número de teléfono"
+                        }
+                    },
+                    "required": ["displayName"]
+                }
+            }
         ]
     }
 

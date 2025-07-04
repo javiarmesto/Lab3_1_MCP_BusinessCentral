@@ -17,7 +17,7 @@ info:
     url: https://techspheredynamics.com
     
 host: mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net
-basePath: /apim/mcp-20business-20central-20custom
+basePath: /
 schemes:
   - https
 
@@ -82,10 +82,9 @@ securityDefinitions:
       API Key opcional para autenticación en producción.
       En desarrollo puede omitirse, en producción se recomienda configurar.
 
-# Aplicar seguridad (opcional)
+# Aplicar seguridad (opcional - sin autenticación por defecto)
 security:
-  - ApiKeyAuth: []
-  - {} # Sin autenticación también permitida
+  - {} # Sin autenticación permitida
 
 # Extensiones específicas para Copilot Studio
 x-ms-connector-metadata:
