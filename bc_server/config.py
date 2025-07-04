@@ -11,6 +11,7 @@ Este módulo centraliza la configuración de la aplicación Business Central MCP
   - Crea una instancia global `config` con los valores validados.
 """
 import os
+import logging
 from dotenv import load_dotenv, find_dotenv
 # Cargar .env automáticamente si existe, incluso en procesos de recarga de Uvicorn
 env_path = find_dotenv()
@@ -19,6 +20,14 @@ if env_path:
 from typing import Optional
 from pydantic import BaseModel, Field, model_validator
 import sys
+
+# Configuración global de logging (si no está ya configurado)
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+logging.basicConfig(
+    level=LOG_LEVEL,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s"
+)
+logger = logging.getLogger("config")
 
 # Note: Environment variables should be loaded by the main module before importing this
 
@@ -89,7 +98,7 @@ class AppConfig:
             assert self.bc.company_id
             return True
         except AssertionError as e:
-            print(f"[ERROR] Configuración inválida: {e}")
+            logger.error(f"Configuración inválida: {e}")
             return False
 
 # Instancia compartida
