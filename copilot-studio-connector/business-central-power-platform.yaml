@@ -1,0 +1,208 @@
+swagger: '2.0'
+info:
+  title: Business Central MCP Connector
+  description: |
+    Conector para Microsoft Dynamics 365 Business Central usando protocolo MCP (Model Context Protocol).
+    Proporciona acceso directo a datos y operaciones de Business Central de forma conversacional.
+    
+    Herramientas MCP disponibles:
+    - Consultar clientes registrados con filtros avanzados
+    - Obtener información detallada de clientes específicos
+    - Explorar catálogo completo de productos y servicios
+    - Revisar órdenes de venta y estado de transacciones
+    - Registrar nuevos clientes en el sistema
+    - Verificar estado y disponibilidad del servidor
+    
+    Servidor MCP desplegado en Azure App Service con datos reales de Business Central.
+  version: 1.0.0
+  contact:
+    name: TechSphere Dynamics
+    url: https://techspheredynamics.com
+    
+host: mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net
+basePath: /
+schemes:
+  - https
+
+# Rutas optimizadas para Power Platform con compatibilidad MCP
+paths:
+  /mcp:
+    post:
+      summary: Ejecutar Operación MCP en Business Central
+      description: |
+        Endpoint principal para comunicación MCP con Business Central.
+        Procesa solicitudes JSON-RPC y ejecuta herramientas del servidor MCP.
+        
+        Compatible con Model Context Protocol v1.0 usando transporte Streamable.
+        Las herramientas se detectan automáticamente desde el servidor MCP.
+      operationId: ExecuteMCPOperation
+      # x-ms-summary y x-ms-visibility eliminados para compatibilidad
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: mcpRequest
+          in: body
+          required: true
+          description: |
+            Solicitud MCP en formato JSON-RPC 2.0.
+            Especifica qué herramienta ejecutar y con qué parámetros.
+          schema:
+            type: object
+            properties:
+              jsonrpc:
+                type: string
+                default: "2.0"
+                description: Versión del protocolo JSON-RPC
+                x-ms-summary: Versión JSON-RPC
+              method:
+                type: string
+                description: Método MCP a invocar
+                x-ms-summary: Método MCP
+                enum:
+                  - tools/call
+                  - tools/list
+                  - initialize
+                example: "tools/call"
+              params:
+                type: object
+                description: Parámetros del método MCP
+                x-ms-summary: Parámetros MCP
+                properties:
+                  name:
+                    type: string
+                    description: Nombre de la herramienta a ejecutar
+                    x-ms-summary: Herramienta
+                    enum:
+                      - get_customers
+                      - get_customer_details
+                      - get_items
+                      - get_sales_orders
+                      - create_customer
+                      - health_check
+                    example: "get_customers"
+                  arguments:
+                    type: object
+                    description: Argumentos específicos de la herramienta
+                    x-ms-summary: Argumentos
+                    additionalProperties: true
+                    example: {"limit": 10}
+              id:
+                type: string
+                description: Identificador único de la solicitud
+                x-ms-summary: ID Solicitud
+                example: "req-001"
+            required:
+              - jsonrpc
+              - method
+              - id
+      responses:
+        '200':
+          description: Respuesta exitosa del servidor MCP
+          schema:
+            type: object
+            properties:
+              jsonrpc:
+                type: string
+                description: Versión del protocolo JSON-RPC
+                example: "2.0"
+              result:
+                type: object
+                description: Resultado de la operación MCP
+                properties:
+                  content:
+                    type: array
+                    description: Contenido de la respuesta
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          description: Tipo de contenido (text, resource, etc.)
+                          example: "text"
+                        text:
+                          type: string
+                          description: Datos de respuesta en formato JSON o texto
+                          example: '{"customers": [...], "total": 5}'
+              id:
+                type: string
+                description: ID de la solicitud original
+                example: "req-001"
+        '400':
+          description: Error en la solicitud MCP
+          schema:
+            type: object
+            properties:
+              jsonrpc:
+                type: string
+                example: "2.0"
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    description: Código de error JSON-RPC
+                    example: -32602
+                  message:
+                    type: string
+                    description: Mensaje de error
+                    example: "Parámetros inválidos"
+                  data:
+                    type: object
+                    description: Información adicional del error
+              id:
+                type: string
+                example: "req-001"
+        '401':
+          description: Autenticación requerida
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "API Key requerida"
+        '500':
+          description: Error interno del servidor
+          schema:
+            type: object
+            properties:
+              jsonrpc:
+                type: string
+                example: "2.0"
+              error:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: -32603
+                  message:
+                    type: string
+                    example: "Error interno del servidor"
+              id:
+                type: string
+
+# Configuración de seguridad opcional
+securityDefinitions:
+  ApiKeyAuth:
+    type: apiKey
+    in: header
+    name: X-API-Key
+    description: |
+      API Key opcional para autenticación.
+      Configurar en producción, omitir en desarrollo.
+
+# Metadatos para Copilot Studio
+x-ms-connector-metadata:
+  # Metadatos esenciales para Copilot Studio
+  - propertyName: Website
+    propertyValue: https://techspheredynamics.com
+  - propertyName: Privacy policy
+    propertyValue: https://techspheredynamics.com/privacy
+  - propertyName: Categories
+    propertyValue: Business Management;Data
+
+# Documentación externa
+externalDocs:
+  description: Documentación completa del conector MCP
+  url: https://github.com/javiarmesto/Lab3_1_MCP_BusinessCentral/tree/main/copilot-studio-connector

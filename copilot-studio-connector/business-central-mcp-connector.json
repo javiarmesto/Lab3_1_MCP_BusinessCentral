@@ -1,0 +1,613 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Business Central MCP Connector",
+    "description": "Conector personalizado para Microsoft Copilot Studio que permite acceso a datos y operaciones de Microsoft Dynamics 365 Business Central vía servidor MCP.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "TechSphere Dynamics",
+      "url": "https://techspheredynamics.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net",
+      "description": "Servidor MCP Business Central en Azure"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    },
+    {}
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "healthCheck",
+        "summary": "Verificar estado del servidor",
+        "description": "Comprueba que el servidor MCP esté operativo y responda correctamente.",
+        "tags": ["Utilidades"],
+        "responses": {
+          "200": {
+            "description": "Servidor funcionando correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers": {
+      "get": {
+        "operationId": "getCustomers",
+        "summary": "Listar clientes",
+        "description": "Obtiene una lista de clientes de Business Central con límite configurable.",
+        "tags": ["Clientes"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número máximo de clientes a retornar",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de clientes obtenida exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Customer"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createCustomer",
+        "summary": "Crear nuevo cliente",
+        "description": "Registra un nuevo cliente en Business Central con la información proporcionada.",
+        "tags": ["Clientes"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cliente creado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Datos de entrada inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/customers/{customer_id}": {
+      "get": {
+        "operationId": "getCustomerById",
+        "summary": "Obtener cliente específico",
+        "description": "Obtiene información detallada de un cliente específico por su ID.",
+        "tags": ["Clientes"],
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "description": "ID único del cliente en Business Central",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Información del cliente obtenida exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customer"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Cliente no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/items": {
+      "get": {
+        "operationId": "getItems",
+        "summary": "Listar artículos",
+        "description": "Obtiene el catálogo de productos y servicios disponibles en Business Central.",
+        "tags": ["Inventario"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número máximo de artículos a retornar",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de artículos obtenida exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Item"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders": {
+      "get": {
+        "operationId": "getSalesOrders",
+        "summary": "Listar órdenes de venta",
+        "description": "Obtiene las órdenes de venta registradas en Business Central.",
+        "tags": ["Ventas"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número máximo de órdenes a retornar",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 5
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de órdenes obtenida exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SalesOrder"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API Key para autenticación. Opcional en desarrollo, recomendado en producción."
+      }
+    },
+    "schemas": {
+      "Customer": {
+        "type": "object",
+        "description": "Información completa de un cliente en Business Central",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID único del cliente",
+            "example": "CUST001"
+          },
+          "number": {
+            "type": "string",
+            "description": "Número de cliente",
+            "example": "10000"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Nombre visible del cliente",
+            "example": "Fabrikam Inc."
+          },
+          "type": {
+            "type": "string",
+            "description": "Tipo de cliente",
+            "example": "Company"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email de contacto",
+            "example": "contact@fabrikam.com"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Número de teléfono",
+            "example": "+1-425-555-0100"
+          },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "description": "Sitio web del cliente",
+            "example": "https://www.fabrikam.com"
+          },
+          "addressLine1": {
+            "type": "string",
+            "description": "Dirección principal",
+            "example": "123 Main Street"
+          },
+          "addressLine2": {
+            "type": "string",
+            "description": "Dirección secundaria",
+            "example": "Suite 100"
+          },
+          "city": {
+            "type": "string",
+            "description": "Ciudad",
+            "example": "Seattle"
+          },
+          "state": {
+            "type": "string",
+            "description": "Estado/Provincia",
+            "example": "WA"
+          },
+          "country": {
+            "type": "string",
+            "description": "País",
+            "example": "US"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Código postal",
+            "example": "98052"
+          },
+          "taxRegistrationNumber": {
+            "type": "string",
+            "description": "Número de registro fiscal",
+            "example": "US123456789"
+          },
+          "currencyCode": {
+            "type": "string",
+            "description": "Código de moneda",
+            "example": "USD"
+          },
+          "blocked": {
+            "type": "string",
+            "description": "Estado de bloqueo del cliente",
+            "example": "No"
+          }
+        },
+        "required": ["id", "displayName"]
+      },
+      "CustomerCreate": {
+        "type": "object",
+        "description": "Datos necesarios para crear un nuevo cliente",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "description": "Nombre del cliente (requerido)",
+            "example": "Nueva Empresa S.L."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email de contacto",
+            "example": "contacto@nuevaempresa.com"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Número de teléfono",
+            "example": "+34 91 123 4567"
+          },
+          "website": {
+            "type": "string",
+            "format": "uri",
+            "description": "Sitio web",
+            "example": "https://www.nuevaempresa.com"
+          },
+          "addressLine1": {
+            "type": "string",
+            "description": "Dirección principal",
+            "example": "Calle Mayor 123"
+          },
+          "addressLine2": {
+            "type": "string",
+            "description": "Dirección secundaria",
+            "example": "Oficina 4B"
+          },
+          "city": {
+            "type": "string",
+            "description": "Ciudad",
+            "example": "Madrid"
+          },
+          "state": {
+            "type": "string",
+            "description": "Estado/Provincia",
+            "example": "Madrid"
+          },
+          "country": {
+            "type": "string",
+            "description": "País",
+            "example": "ES"
+          },
+          "postalCode": {
+            "type": "string",
+            "description": "Código postal",
+            "example": "28001"
+          },
+          "taxRegistrationNumber": {
+            "type": "string",
+            "description": "NIF/CIF",
+            "example": "B12345678"
+          },
+          "currencyCode": {
+            "type": "string",
+            "description": "Código de moneda",
+            "example": "EUR"
+          }
+        },
+        "required": ["displayName"]
+      },
+      "Item": {
+        "type": "object",
+        "description": "Información de un artículo del inventario",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID único del artículo",
+            "example": "ITEM001"
+          },
+          "number": {
+            "type": "string",
+            "description": "Número de artículo",
+            "example": "1000"
+          },
+          "displayName": {
+            "type": "string",
+            "description": "Nombre del artículo",
+            "example": "Laptop Business Pro"
+          },
+          "type": {
+            "type": "string",
+            "description": "Tipo de artículo",
+            "enum": ["Inventory", "Service", "Non-Inventory"],
+            "example": "Inventory"
+          },
+          "unitPrice": {
+            "type": "number",
+            "format": "float",
+            "description": "Precio unitario",
+            "example": 1299.99
+          },
+          "baseUnitOfMeasureId": {
+            "type": "string",
+            "description": "Unidad de medida base",
+            "example": "PCS"
+          },
+          "gtin": {
+            "type": "string",
+            "description": "Código de barras GTIN",
+            "example": "1234567890123"
+          },
+          "inventory": {
+            "type": "number",
+            "format": "float",
+            "description": "Cantidad en inventario",
+            "example": 25
+          },
+          "blocked": {
+            "type": "boolean",
+            "description": "Si el artículo está bloqueado",
+            "example": false
+          }
+        },
+        "required": ["id", "displayName"]
+      },
+      "SalesOrder": {
+        "type": "object",
+        "description": "Información de una orden de venta",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID único de la orden",
+            "example": "ORDER001"
+          },
+          "number": {
+            "type": "string",
+            "description": "Número de orden",
+            "example": "SO-001"
+          },
+          "customerId": {
+            "type": "string",
+            "description": "ID del cliente",
+            "example": "CUST001"
+          },
+          "customerName": {
+            "type": "string",
+            "description": "Nombre del cliente",
+            "example": "Fabrikam Inc."
+          },
+          "orderDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Fecha de la orden",
+            "example": "2025-01-15"
+          },
+          "totalAmountExcludingTax": {
+            "type": "number",
+            "format": "float",
+            "description": "Total sin impuestos",
+            "example": 1599.99
+          },
+          "totalAmountIncludingTax": {
+            "type": "number",
+            "format": "float",
+            "description": "Total con impuestos",
+            "example": 1935.99
+          },
+          "status": {
+            "type": "string",
+            "description": "Estado de la orden",
+            "enum": ["Open", "Released", "Pending Approval", "Pending Prepayment"],
+            "example": "Open"
+          },
+          "currencyCode": {
+            "type": "string",
+            "description": "Código de moneda",
+            "example": "EUR"
+          }
+        },
+        "required": ["id", "number", "customerId"]
+      },
+      "Error": {
+        "type": "object",
+        "description": "Información de error estándar",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "description": "Descripción detallada del error",
+            "example": "Cliente no encontrado con el ID especificado"
+          },
+          "status": {
+            "type": "integer",
+            "description": "Código de estado HTTP",
+            "example": 404
+          },
+          "title": {
+            "type": "string",
+            "description": "Título del error",
+            "example": "Not Found"
+          }
+        },
+        "required": ["detail"]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Utilidades",
+      "description": "Operaciones de diagnóstico y estado del servidor"
+    },
+    {
+      "name": "Clientes",
+      "description": "Gestión de clientes de Business Central"
+    },
+    {
+      "name": "Inventario",
+      "description": "Consulta de artículos y productos"
+    },
+    {
+      "name": "Ventas",
+      "description": "Información de órdenes y transacciones de venta"
+    }
+  ]
+}

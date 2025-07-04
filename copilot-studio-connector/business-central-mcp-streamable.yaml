@@ -1,0 +1,195 @@
+swagger: '2.0'
+info:
+  title: Business Central MCP Server
+  description: |
+    Servidor MCP para Microsoft Dynamics 365 Business Central con transporte Streamable.
+    Proporciona acceso a datos y operaciones de Business Central vía Model Context Protocol.
+    
+    Operaciones disponibles:
+    - Consultar clientes y información de contacto
+    - Obtener catálogo de productos y servicios
+    - Revisar órdenes de venta y transacciones
+    - Crear nuevos registros de clientes
+    - Verificar estado del sistema
+  version: 1.0.0
+  contact:
+    name: TechSphere Dynamics
+    url: https://techspheredynamics.com
+    
+host: mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net
+basePath: /apim/mcp-20business-20central-20custom
+schemes:
+  - https
+
+# Definición específica para MCP Streamable
+paths:
+  /mcp:
+    post:
+      summary: Business Central MCP Operations
+      description: |
+        Endpoint principal para todas las operaciones MCP de Business Central.
+        Soporta consultas de clientes, productos, órdenes y creación de registros.
+        
+        El servidor MCP expone las siguientes herramientas:
+        - get_customers: Lista clientes con filtros opcionales
+        - get_customer_details: Información detallada de cliente específico  
+        - get_items: Catálogo de productos y servicios
+        - get_sales_orders: Órdenes de venta y transacciones
+        - create_customer: Registro de nuevos clientes
+        - health_check: Verificación de estado del servidor
+      x-ms-agentic-protocol: mcp-streamable-1.0
+      operationId: InvokeMCPoperations
+      parameters:
+        - name: queryRequest
+          in: body
+          description: |
+            Solicitud MCP en formato JSON-RPC para el servidor Business Central.
+            El servidor procesará la solicitud y ejecutará la herramienta apropiada.
+          required: true
+          schema:
+            $ref: '#/definitions/MCPRequest'
+      responses:
+        '200':
+          description: |
+            Respuesta exitosa del servidor MCP Business Central.
+            Contiene los datos solicitados o confirmación de operación.
+          schema:
+            $ref: '#/definitions/MCPResponse'
+        '400':
+          description: Solicitud MCP malformada o parámetros inválidos
+          schema:
+            $ref: '#/definitions/MCPError'
+        '401':
+          description: Autenticación requerida o API Key inválida
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: "API Key requerida o inválida"
+        '500':
+          description: Error interno del servidor MCP o Business Central
+          schema:
+            $ref: '#/definitions/MCPError'
+
+# Configuraciones de seguridad
+securityDefinitions:
+  ApiKeyAuth:
+    type: apiKey
+    in: header
+    name: X-API-Key
+    description: |
+      API Key opcional para autenticación en producción.
+      En desarrollo puede omitirse, en producción se recomienda configurar.
+
+# Aplicar seguridad (opcional)
+security:
+  - ApiKeyAuth: []
+  - {} # Sin autenticación también permitida
+
+# Extensiones específicas para Copilot Studio
+x-ms-connector-metadata:
+  - propertyName: Website
+    propertyValue: https://techspheredynamics.com
+  - propertyName: Privacy policy
+    propertyValue: https://techspheredynamics.com/privacy
+  - propertyName: Categories
+    propertyValue: Business Management;Data
+
+# Documentación adicional
+externalDocs:
+  description: Documentación completa del servidor MCP Business Central
+  url: https://github.com/javiarmesto/Lab3_1_MCP_BusinessCentral/tree/main/copilot-studio-connector
+
+# Definiciones para referencia
+definitions:
+  MCPRequest:
+    type: object
+    description: Estructura estándar de solicitud MCP
+    properties:
+      jsonrpc:
+        type: string
+        default: "2.0"
+        description: Versión del protocolo JSON-RPC
+      method:
+        type: string
+        description: Método MCP a ejecutar
+        enum:
+          - tools/call
+          - tools/list
+          - initialize
+      params:
+        type: object
+        description: Parámetros específicos del método MCP
+        properties:
+          name:
+            type: string
+            description: Nombre de la herramienta a ejecutar
+            enum:
+              - get_customers
+              - get_customer_details  
+              - get_items
+              - get_sales_orders
+              - create_customer
+              - health_check
+          arguments:
+            type: object
+            description: Argumentos específicos de la herramienta
+      id:
+        type: string
+        description: ID único de la solicitud
+    required:
+      - jsonrpc
+      - method
+      - id
+      
+  MCPResponse:
+    type: object
+    description: Estructura estándar de respuesta MCP
+    properties:
+      jsonrpc:
+        type: string
+        description: Versión del protocolo JSON-RPC
+      result:
+        type: object
+        description: Resultado de la operación MCP
+        properties:
+          content:
+            type: array
+            description: Contenido de la respuesta
+            items:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: Tipo de contenido
+                text:
+                  type: string
+                  description: Datos en formato texto/JSON
+      id:
+        type: string
+        description: ID de la solicitud original
+
+  MCPError:
+    type: object
+    description: Estructura estándar de error MCP
+    properties:
+      jsonrpc:
+        type: string
+        description: Versión del protocolo JSON-RPC
+      error:
+        type: object
+        description: Información del error
+        properties:
+          code:
+            type: integer
+            description: Código de error JSON-RPC
+          message:
+            type: string
+            description: Mensaje descriptivo del error
+          data:
+            type: object
+            description: Datos adicionales del error
+      id:
+        type: string
+        description: ID de la solicitud original

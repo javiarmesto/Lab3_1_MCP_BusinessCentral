@@ -15,13 +15,14 @@ from typing import List, Optional
 import os
 import logging
 from dotenv import load_dotenv
-# Cargar variables de entorno
+# Cargar variables de entorno solo si existe .env (local). En Azure, las variables ya están en el entorno.
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 env_path = os.path.join(project_root, '.env')
 if os.path.exists(env_path):
     load_dotenv(env_path, override=True)
 else:
-    raise FileNotFoundError(f".env file not found at {env_path}. Please ensure the file is correctly placed.")
+    # En Azure, las variables ya están en el entorno, no es necesario .env
+    pass
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel

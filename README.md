@@ -3,6 +3,15 @@
 
 Este proyecto implementa un **servidor MCP** para Microsoft Business Central, usando FastMCP y FastAPI, integrable con Claude Desktop y otros clientes AI.
 
+## 🌐 Servidor Online Disponible
+
+**🎉 El servidor está desplegado y operativo en Azure App Service:**
+- **URL**: https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net
+- **Documentación API**: https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/docs
+- **Estado**: ✅ 100% funcional con datos reales de Business Central
+- **Endpoints disponibles**: GET /customers, /items, /orders, POST /customers
+
+📋 **Para usar el servidor desplegado**: Consulta el archivo `test-mcp-api.http` con ejemplos de todas las operaciones.
 
 ## 📋 ¿Qué es MCP?
 
@@ -122,6 +131,8 @@ Script para comprobar variables de entorno y conectividad con Azure AD y Busines
 
 ## 🚀 Instalación y Puesta en Marcha
 
+### 💻 Entorno Local
+
 ### 1. Crear entorno virtual
 ```powershell
 python -m venv .venv
@@ -148,6 +159,40 @@ python -m bc_server.BusinessCentralMCP
 uvicorn bc_server.http_server:app --reload --host 0.0.0.0 --port 8000
 ```
 Accede a la documentación interactiva en: http://localhost:8000/docs
+
+### ☁️ Despliegue en Azure App Service
+
+**¿Quieres el servidor disponible online?** Consulta la **[Guía Completa de Despliegue](./DEPLOYMENT_GUIDE.md)** que incluye:
+- Proceso paso a paso para Azure App Service
+- Solución a todos los problemas encontrados
+- Configuración de variables de entorno
+- Scripts de automatización
+- Suite de testing completa
+
+**Resultado**: Servidor 100% operativo en Azure con integración real a Business Central.
+
+## 🧪 Testing del Servidor Desplegado
+
+El archivo `test-mcp-api.http` contiene una suite completa de tests para validar todas las funcionalidades:
+
+```http
+### Health Check
+GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/health
+
+### Listar Clientes
+GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers?limit=5
+
+### Crear Cliente
+POST https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers
+Content-Type: application/json
+
+{
+  "displayName": "Cliente Test",
+  "email": "test@example.com"
+}
+```
+
+**Usar REST Client extension** de VS Code para ejecutar los tests directamente desde el editor.
 
 
 ## 🔧 Integración con Claude Desktop
@@ -201,6 +246,17 @@ Consulta la documentación Swagger en `/docs` si usas la API REST.
 
 
 ## 📚 Referencias oficiales y recursos útiles
+
+### 📖 Documentación del Proyecto
+
+| Recurso | Descripción |
+|---------|-------------|
+| [Guía de Despliegue Azure](./DEPLOYMENT_GUIDE.md) | Proceso completo para llevar el servidor a producción |
+| [Suite de Tests](./test-mcp-api.http) | Validación completa de endpoints con REST Client |
+| [Configuración MCP](./bc_server/BusinessCentralMCP.py) | Servidor JSON-RPC para integración con AI clients |
+| [API REST](./bc_server/http_server.py) | Endpoints HTTP con documentación OpenAPI |
+
+### 🌐 Enlaces Oficiales de Microsoft
 
 - [MCP servers en Microsoft Learn](https://learn.microsoft.com/en-us/azure/api-management/export-rest-mcp-server#about-mcp-servers)
 - [APIs REST de Business Central](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/webservices/api-overview)

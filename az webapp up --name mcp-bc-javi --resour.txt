@@ -1,1 +1,0 @@
-az webapp up --name mcp-bc-javi --resource-group circe_agent --runtime PYTHON|3.11
