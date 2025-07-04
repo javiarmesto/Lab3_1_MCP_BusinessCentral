@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  title: Business Central MCP Server
+  title: Business Central MCP Server v2
   description: Get Business Central data using MCP server. For instance customers, items, sales orders and create customers.
   version: '1.0'
 host: mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net
@@ -24,14 +24,17 @@ definitions:
       error:
         type: object
 paths:
-  /sse:
-    get:
+  /mcp:
+    post:
       summary: Business Central MCP Server
       parameters:
-        - in: query
-          name: sessionId
-          type: string
+        - in: body
+          name: body
           required: false
+          schema:
+            $ref: '#/definitions/QueryResponse'
+      consumes:
+        - application/json
       produces:
         - application/json
       responses:
