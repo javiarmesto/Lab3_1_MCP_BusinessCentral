@@ -1,5 +1,5 @@
-# Dependencias del proyecto
-fastmcp
+# Dependencias del proyecto - SDK MCP oficial
+mcp[cli]==1.0.0
 httpx
 pydantic
 fastapi

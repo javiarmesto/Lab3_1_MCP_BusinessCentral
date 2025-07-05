@@ -1,8 +1,31 @@
 swagger: '2.0'
 info:
-  title: Business Central MCP Server v2
-  description: Get Business Central data using MCP server. For instance customers, items, sales orders and create customers.
-  version: '1.0'
+  title: Microsoft Business Central MCP Connector
+  description: |
+    Conector híbrido para Microsoft Copilot Studio que integra con Microsoft Dynamics 365 Business Central.
+    
+    **Capacidades principales:**
+    • 📊 **Consulta de datos**: Clientes, artículos, órdenes de venta con filtros y paginación
+    • 🆕 **Creación de registros**: Nuevos clientes con validación automática
+    • 🔄 **Protocolo dual**: Endpoints REST estándar + JSON-RPC MCP streamable
+    • 🛡️ **Autenticación OAuth2**: Integración segura con Azure AD/Entra ID
+    • ⚡ **Tiempo real**: Soporte SSE (Server-Sent Events) para agentes conversacionales
+    
+    **Casos de uso típicos:**
+    - "Muéstrame los últimos 5 clientes registrados"
+    - "Crea un cliente llamado Acme Corp con email acme@corp.com"
+    - "¿Cuáles son los artículos más vendidos este mes?"
+    - "Listar órdenes pendientes de aprobación"
+    
+    Desarrollado por TechSphere Dynamics para facilitar la integración entre IA y ERP empresarial.
+  version: '2.1.0'
+  contact:
+    name: TechSphere Dynamics
+    url: https://techspheredynamics.com
+    email: soporte@techspheredynamics.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
 host: mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net
 basePath: /
 schemes:
@@ -24,6 +47,168 @@ definitions:
       error:
         type: object
 paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Verificar estado del servidor
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Servidor funcionando correctamente
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: ok
+      operationId: healthCheck
+      tags:
+        - Utilities
+  /customers:
+    get:
+      summary: Listar clientes
+      description: Obtiene una lista de clientes de Business Central
+      parameters:
+        - name: limit
+          in: query
+          description: Número máximo de clientes a retornar
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Lista de clientes obtenida exitosamente
+          schema:
+            type: array
+            items:
+              type: object
+        '500':
+          description: Error interno del servidor
+      operationId: getCustomers
+      tags:
+        - Customers
+    post:
+      summary: Crear nuevo cliente
+      description: Registra un nuevo cliente en Business Central
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              displayName:
+                type: string
+              email:
+                type: string
+              phoneNumber:
+                type: string
+              addressLine1:
+                type: string
+              city:
+                type: string
+              country:
+                type: string
+              taxRegistrationNumber:
+                type: string
+            required:
+              - displayName
+              - email
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '201':
+          description: Cliente creado exitosamente
+        '400':
+          description: Datos de entrada inválidos
+        '500':
+          description: Error interno del servidor
+      operationId: createCustomer
+      tags:
+        - Customers
+  /customers/{customer_id}:
+    get:
+      summary: Obtener cliente específico
+      description: Obtiene información detallada de un cliente específico por su ID
+      parameters:
+        - name: customer_id
+          in: path
+          description: ID único del cliente en Business Central
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Información del cliente obtenida exitosamente
+        '404':
+          description: Cliente no encontrado
+        '500':
+          description: Error interno del servidor
+      operationId: getCustomerById
+      tags:
+        - Customers
+  /items:
+    get:
+      summary: Listar artículos
+      description: Obtiene el catálogo de productos y servicios disponibles en Business Central
+      parameters:
+        - name: limit
+          in: query
+          description: Número máximo de artículos a retornar
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 10
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Lista de artículos obtenida exitosamente
+          schema:
+            type: array
+            items:
+              type: object
+        '500':
+          description: Error interno del servidor
+      operationId: getItems
+      tags:
+        - Items
+  /orders:
+    get:
+      summary: Listar órdenes de venta
+      description: Obtiene las órdenes de venta de Business Central
+      parameters:
+        - name: limit
+          in: query
+          description: Número máximo de órdenes a retornar
+          required: false
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 5
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Lista de órdenes obtenida exitosamente
+          schema:
+            type: array
+            items:
+              type: object
+        '500':
+          description: Error interno del servidor
+      operationId: getOrders
+      tags:
+        - Orders
   /mcp:
     post:
       summary: Business Central MCP Server
