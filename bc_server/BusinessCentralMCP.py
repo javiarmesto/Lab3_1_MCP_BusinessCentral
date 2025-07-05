@@ -32,21 +32,16 @@ if os.path.exists(env_path):
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from mcp import MCPServer  # Usa el SDK oficial de MCP Python
+from mcp.server.fastmcp import FastMCP
 from bc_server.config import config
 from bc_server.client import bc_client
 
 
-# Inicializar servidor MCP usando SDK oficial
-server = MCPServer(
-    name="BusinessCentral",
-    protocol="mcp-streamable-1.0",
-    host=os.getenv("MCP_HOST", "0.0.0.0"),
-    port=int(os.getenv("MCP_PORT", 8000))
-)
+# Inicializar servidor MCP
+mcp = FastMCP("BusinessCentral")
 
 # Handler para tools/list (descubrimiento automático de herramientas)
-@server.method("tools/list")
+@mcp.method("tools/list")
 async def list_tools():
     """
     Devuelve la lista de herramientas MCP disponibles para discovery automático.
@@ -148,14 +143,14 @@ async def list_tools():
         ]
     }
 
-@server.tool()
+@mcp.tool()
 async def get_customers(limit: int = 10):
     """Lista clientes de Business Central."""
     if not config.validate():
         return {"error": "configuración inválida"}
     return await bc_client.get_customers(top=limit)
 
-@server.tool()
+@mcp.tool()
 async def get_customer_details(customer_id: str):
     """Muestra detalles de un cliente por ID."""
     if not config.validate():
@@ -163,21 +158,21 @@ async def get_customer_details(customer_id: str):
     result = await bc_client.get_customer(customer_id)
     return result or {"error": "cliente no encontrado"}
 
-@server.tool()
+@mcp.tool()
 async def get_items(limit: int = 10):
     """Lista artículos de Business Central."""
     if not config.validate():
         return {"error": "configuración inválida"}
     return await bc_client.get_items(top=limit)
 
-@server.tool()
+@mcp.tool()
 async def get_sales_orders(limit: int = 5):
     """Lista órdenes de venta de Business Central."""
     if not config.validate():
         return {"error": "configuración inválida"}
     return await bc_client.get_orders(top=limit)
 
-@server.tool(name="create_customer")
+@mcp.tool(name="create_customer")
 async def create_customer(
     displayName: str,
     type: str = "Company",
@@ -235,9 +230,13 @@ async def create_customer(
     }
     return await bc_client.create_customer(customer_data)
 
-def main():
-    # Despliega el servidor MCP
-    server.run()
-
 if __name__ == "__main__":
-    main()
+    usuario = getpass.getuser()
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"""
+🚀 Servidor MCP BusinessCentral listo y esperando comandos... | Circe & Javier Armesto Powered 🤖✨
+👤 Usuario: {usuario} | 🕒 Inicio: {fecha}
+💡 Tip Circe: Usa get_customers(limit) para listar clientes rápidamente.
+---------------------------------------------------------------
+""")
+    mcp.run()
