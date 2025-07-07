@@ -16,7 +16,7 @@ import httpx
 import logging
 import os
 from typing import Any, Dict, List, Optional
-from bc_server.config import config
+from bc_server_bkp.config import config
 from auth.azure_auth import token_manager
 
 # Configuración global de logging

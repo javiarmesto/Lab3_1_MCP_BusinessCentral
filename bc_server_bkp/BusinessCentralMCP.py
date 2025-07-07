@@ -33,8 +33,8 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 from mcp.server.fastmcp import FastMCP
-from bc_server.config import config
-from bc_server.client import bc_client
+from bc_server_bkp.config import config
+from bc_server_bkp.client import bc_client
 
 
 # Inicializar servidor MCP

@@ -1,71 +1,107 @@
-###
-# Business Central MCP API - Test Suite
-# Servidor: https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net
-# 
-# Instrucciones:
-# 1. Haz clic en "Send Request" arriba de cada petición
-# 2. Revisa la respuesta en el panel derecho
-# 3. Si hay errores, copia el mensaje para depurar
-###
+# Pruebas del servidor MCP Business Central
+# Usar con extensión REST Client de VS Code
 
-### 1. Health Check - Verificar que el servidor esté funcionando
-GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/health
+### Configuración
+@baseUrl = https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net
+@mcpEndpoint = {{baseUrl}}/mcp
 
-### 2. OpenAPI Schema - Obtener el esquema de la API
-GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/openapi.json
+### Verificar si el servidor está en línea
+GET {{baseUrl}}
+Accept: text/html
 
-### 3. Listar Clientes (límite 3)
-GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers?limit=3
-
-### 4. Listar Clientes (límite 10)
-GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers?limit=10
-
-### 5. Obtener detalles de un cliente específico (reemplaza CUSTOMER_ID con un ID real)
-# GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers/CUSTOMER_ID
-
-### 6. Listar Artículos (límite 5)
-GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/items?limit=5
-
-### 7. Listar Órdenes de Venta (límite 3)
-GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/orders?limit=3
-
-### 8. Crear un nuevo cliente (TEST)
-POST https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers
-Content-Type: application/json
-
-{
-  "displayName": "Cliente Test MCP",
-  "email": "test.mcp@example.com",
-  "phoneNumber": "+34 123 456 789",
-  "addressLine1": "Calle Test 123",
-  "city": "Madrid",
-  "country": "ES",
-  "taxRegistrationNumber": "A12345678"
-}
-
-### 9. Crear cliente mínimo (solo campos requeridos)
-POST https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers
-Content-Type: application/json
-
-{
-  "displayName": "Cliente Mínimo",
-  "email": "minimo@example.com"
-}
-
-###
-# NOTAS:
-# - Ejecuta primero el Health Check para confirmar que el servidor funciona
-# - Luego prueba GET /customers para ver si la integración con Business Central funciona
-# - Si hay errores 500, revisa las variables de entorno en Azure Portal
-# - Para probar un cliente específico, usa un ID real de la respuesta de GET /customers
-#
-### 10. Obtener lista de tools MCP (tools/list)
-POST https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/mcp
+### Listar herramientas disponibles
+POST {{mcpEndpoint}}
 Content-Type: application/json
 
 {
   "jsonrpc": "2.0",
-  "method": "tools/list",
-  "id": "1"
+  "id": "1",
+  "method": "listTools",
+  "params": {}
 }
-###
+
+### Obtener 5 clientes
+POST {{mcpEndpoint}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "runTool",
+  "params": {
+    "name": "get_customers",
+    "parameters": {
+      "limit": 5
+    }
+  }
+}
+
+### Obtener detalles de un cliente específico (reemplazar CLIENTE01 con un ID real)
+POST {{mcpEndpoint}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "runTool",
+  "params": {
+    "name": "get_customer_details",
+    "parameters": {
+      "customer_id": "CLIENTE01"
+    }
+  }
+}
+
+### Obtener 10 artículos
+POST {{mcpEndpoint}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "runTool",
+  "params": {
+    "name": "get_items",
+    "parameters": {
+      "limit": 10
+    }
+  }
+}
+
+### Obtener 3 órdenes de venta
+POST {{mcpEndpoint}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "runTool",
+  "params": {
+    "name": "get_sales_orders",
+    "parameters": {
+      "limit": 3
+    }
+  }
+}
+
+### Crear un nuevo cliente
+POST {{mcpEndpoint}}
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "runTool",
+  "params": {
+    "name": "create_customer",
+    "parameters": {
+      "displayName": "Empresa de Prueba",
+      "email": "contacto@empresaprueba.com",
+      "phoneNumber": "912345678",
+      "addressLine1": "Calle Principal 123",
+      "city": "Madrid",
+      "country": "ES",
+      "taxRegistrationNumber": "B12345678"
+    }
+  }
+}

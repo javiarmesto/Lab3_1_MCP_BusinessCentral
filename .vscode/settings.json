@@ -1,0 +1,5 @@
+{
+    "postman.settings.dotenv-detection-notification-visibility": false,
+    "appService.defaultWebAppToDeploy": "/subscriptions/4030db1b-2e5a-49d0-b57a-11d0b1f78237/resourceGroups/circe_agent/providers/Microsoft.Web/sites/mcp-bc-javi",
+    "appService.deploySubpath": "."
+}

@@ -1,26 +1,63 @@
 """
-Azure AD Client Credentials Flow con cache de token
+azure_auth.py
+
+Objetivo:
+---------
+Gestionar la autenticación OAuth2 con Azure AD (Entra ID) usando el flujo Client Credentials,
+incluyendo cache de tokens y helpers asíncronos para obtener y renovar el token de acceso.
+
+Este módulo centraliza la obtención de tokens para acceder a la API de Business Central desde Python,
+siguiendo las mejores prácticas de seguridad y eficiencia.
+
+Referencias:
+- https://learn.microsoft.com/en-us/azure/active-directory/develop/v2-oauth2-client-creds-grant-flow
+- https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/administration/azure-active-directory
 """
+
+# =============================
+# IMPORTS Y DEPENDENCIAS
+# =============================
 import asyncio
 import httpx
 from datetime import datetime, timedelta
 from typing import Optional
-from bc_server.config import config
+from config import config
 
+
+# =============================
+# CLASE PRINCIPAL DE GESTIÓN DE TOKENS
+# =============================
 class AzureTokenManager:
     def __init__(self):
+        # Token actual y expiración
         self._token: Optional[str] = None
         self._expires: Optional[datetime] = None
+        # Scope de acceso para Business Central
         self._scope = "https://api.businesscentral.dynamics.com/.default"
 
+
+    # =============================
+    # MÉTODO PRIVADO: ¿Token válido?
+    # =============================
     def _valid(self) -> bool:
         return self._token and self._expires and datetime.utcnow() < self._expires
 
+
+    # =============================
+    # OBTENER TOKEN (público, preferido)
+    # =============================
     async def get_token(self) -> Optional[str]:
+        """
+        Devuelve un token válido, renovando si es necesario.
+        """
         if self._valid():
             return self._token
         return await self._fetch()
 
+
+    # =============================
+    # MÉTODO PRIVADO: Solicitar nuevo token a Azure AD
+    # =============================
     async def _fetch(self) -> Optional[str]:
         url = f"{config.azure_ad.authority}/oauth2/v2.0/token"
         data = {
@@ -40,9 +77,13 @@ class AzureTokenManager:
         print(f"[ERROR] Token Azure AD: {resp.status_code}")
         return None
 
+
+    # =============================
+    # MÉTODO ALTERNATIVO: Solicitar token (simula Postman)
+    # =============================
     async def _acquire_new_token(self) -> Optional[str]:
         """
-        Adquiere un nuevo token de Azure AD
+        Adquiere un nuevo token de Azure AD usando un body URL-encoded (útil para debugging avanzado).
         """
         token_url = f"{config.azure_ad.authority}/oauth2/v2.0/token"
         # Construimos el body como URL-encoded
@@ -78,4 +119,8 @@ class AzureTokenManager:
             print(f"[ERROR] Exception acquiring token: {e}")
             return None
 
+
+# =============================
+# SINGLETON GLOBAL PARA USO EN TODO EL PROYECTO
+# =============================
 token_manager = AzureTokenManager()

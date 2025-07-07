@@ -1,8 +1,16 @@
-# Dependencias del proyecto - SDK MCP oficial
-mcp[cli]==1.0.0
+
+# Dependencias del proyecto - SDK MCP oficial y requeridas por fastmcp
+mcp[cli]>=1.10.0
+fastmcp>=2.10.1
 httpx
 pydantic
+python-dotenv
+authlib
+exceptiongroup
+openapi-pydantic
+rich
+typer
+# Opcionales para desarrollo y API REST
 fastapi
 uvicorn
-python-dotenv
 

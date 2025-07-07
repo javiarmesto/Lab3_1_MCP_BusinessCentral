@@ -1,0 +1,71 @@
+###
+# Business Central MCP API - Test Suite
+# Servidor: https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net
+# 
+# Instrucciones:
+# 1. Haz clic en "Send Request" arriba de cada petición
+# 2. Revisa la respuesta en el panel derecho
+# 3. Si hay errores, copia el mensaje para depurar
+###
+
+### 1. Health Check - Verificar que el servidor esté funcionando
+GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/health
+
+### 2. OpenAPI Schema - Obtener el esquema de la API
+GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/openapi.json
+
+### 3. Listar Clientes (límite 3)
+GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers?limit=3
+
+### 4. Listar Clientes (límite 10)
+GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers?limit=10
+
+### 5. Obtener detalles de un cliente específico (reemplaza CUSTOMER_ID con un ID real)
+# GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers/CUSTOMER_ID
+
+### 6. Listar Artículos (límite 5)
+GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/items?limit=5
+
+### 7. Listar Órdenes de Venta (límite 3)
+GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/orders?limit=3
+
+### 8. Crear un nuevo cliente (TEST)
+POST https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers
+Content-Type: application/json
+
+{
+  "displayName": "Cliente Test MCP",
+  "email": "test.mcp@example.com",
+  "phoneNumber": "+34 123 456 789",
+  "addressLine1": "Calle Test 123",
+  "city": "Madrid",
+  "country": "ES",
+  "taxRegistrationNumber": "A12345678"
+}
+
+### 9. Crear cliente mínimo (solo campos requeridos)
+POST https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers
+Content-Type: application/json
+
+{
+  "displayName": "Cliente Mínimo",
+  "email": "minimo@example.com"
+}
+
+###
+# NOTAS:
+# - Ejecuta primero el Health Check para confirmar que el servidor funciona
+# - Luego prueba GET /customers para ver si la integración con Business Central funciona
+# - Si hay errores 500, revisa las variables de entorno en Azure Portal
+# - Para probar un cliente específico, usa un ID real de la respuesta de GET /customers
+#
+### 10. Obtener lista de tools MCP (tools/list)
+POST https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/mcp
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "method": "tools/list",
+  "id": "1"
+}
+###
