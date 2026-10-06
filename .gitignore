@@ -2,3 +2,7 @@
 __pycache__/
 *.pyc
 .env
+
+# Generated deployment artifacts and personal logs
+deploy.zip
+recent_logs.zip
