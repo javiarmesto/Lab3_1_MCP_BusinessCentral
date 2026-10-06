@@ -1,289 +1,61 @@
+# Lab3_1 · MCP para Business Central
 
-# MCP_BusinessCentral - Servidor Model Context Protocol 🚀
+Laboratorio Python que conecta herramientas MCP con las APIs de Business Central mediante credenciales de aplicación de Entra ID. Contiene variantes STDIO y HTTP para estudiar clientes, autenticación y transporte. Es material de aprendizaje; no se ofrece un servicio público mantenido.
 
-Este proyecto implementa un **servidor MCP** para Microsoft Business Central, usando FastMCP y FastAPI, integrable con Claude Desktop y otros clientes AI.
+## Estado y requisitos
 
-## 🌐 Servidor Online Disponible
+Revisión estática del 6 de octubre de 2026. El despliegue personal citado anteriormente no se ha invocado y su disponibilidad no está acreditada. No se afirma que el proyecto sea «100% funcional» ni que esté listo para producción.
 
-**🎉 El servidor está desplegado y operativo en Azure App Service:**
-- **URL**: https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net
-- **Documentación API**: https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/docs
-- **Estado**: ✅ 100% funcional con datos reales de Business Central
-- **Endpoints disponibles**: GET /customers, /items, /orders, POST /customers
+Necesitas Python compatible con las dependencias de [requirements.txt](requirements.txt), pip, un sandbox BC con APIs y una aplicación Entra autorizada en ese sandbox. El repo no fija una versión exacta de Python ni un lock de dependencias. Las versiones mínimas declaradas de MCP/FastMCP no prueban compatibilidad con todas las versiones posteriores.
 
-📋 **Para usar el servidor desplegado**: Consulta el archivo `test-mcp-api.http` con ejemplos de todas las operaciones.
+## Preparar una copia local
 
-## 📋 ¿Qué es MCP?
-
-El **Model Context Protocol** (MCP) es un estándar abierto que permite a clientes AI acceder a herramientas, datos y servicios externos de forma segura y estructurada. MCP define una arquitectura cliente-servidor donde:
-- **MCP Host:** Cliente AI (Claude, Copilot, etc.)
-- **MCP Client:** Conector MCP en el host
-- **MCP Server:** Este proyecto (Python) expone herramientas y lógica de negocio
-- **Transporte:** JSON-RPC sobre stdin/stdout (local) o HTTP/SSE (remoto)
-
-Más información: [MCP servers en Microsoft Learn](https://learn.microsoft.com/en-us/azure/api-management/export-rest-mcp-server#about-mcp-servers)
-## 🔒 Autenticación y Seguridad
-
-- Se recomienda usar Microsoft Entra ID (Azure AD) y OAuth2 para entornos de producción.
-- Consulta la [guía de autenticación para Business Central](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-develop-connect-apps).
-
-### Ejemplo: Autenticación OAuth2 con Entra ID
-
-```python
-import httpx
-
-def get_bc_token(tenant_id, client_id, client_secret, scope):
-    url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
-    data = {
-        "grant_type": "client_credentials",
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "scope": scope
-    }
-    response = httpx.post(url, data=data)
-    response.raise_for_status()
-    return response.json()["access_token"]
-```
-Más información: [Guía de autenticación](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-develop-connect-apps)
-## ⚠️ Manejo de límites y errores
-
-- Business Central impone límites de uso (rate limits) en sus APIs. Si recibes errores 429 (Too Many Requests) o 504 (Gateway Timeout), implementa lógica de reintentos y backoff.
-- Más información: [Límites de API en Business Central](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/api-reference/v2.0/dynamics-rate-limits).
-
-### Ejemplo: Manejo de errores 429 y 504 en llamadas a la API
-
-```python
-import httpx
-import time
-
-def call_bc_api_with_retry(url, headers, max_retries=5):
-    retries = 0
-    backoff = 2
-    while retries < max_retries:
-        response = httpx.get(url, headers=headers)
-        if response.status_code == 429:
-            wait = backoff ** retries
-            print(f"Rate limit alcanzado. Reintentando en {wait}s...")
-            time.sleep(wait)
-            retries += 1
-        elif response.status_code == 504:
-            print("Timeout de la API. Reintentando...")
-            time.sleep(backoff)
-            retries += 1
-        else:
-            return response
-    raise Exception("No se pudo completar la petición tras varios intentos")
-```
-Más información: [Límites de API en Business Central](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/api-reference/v2.0/dynamics-rate-limits)
-## 🏅 Buenas prácticas de integración
-
-- Usa siempre los endpoints REST oficiales de Business Central para la integración.
-- Desacopla la lógica de negocio del transporte MCP.
-- Documenta claramente las herramientas expuestas y sus parámetros siguiendo el estándar MCP.
-- Consulta la [documentación de APIs REST de Business Central](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/webservices/api-overview).
-
-## 🏗️ Estructura del Proyecto
-
-```
-📁 MCP_BusinessCentral/
-├── requirements.txt            # Dependencias Python
-├── README.md                   # Documentación principal
-├── .env                        # Variables de entorno (no se incluye en repo)
-├── .venv/                      # Entorno virtual Python
-├── .github/copilot-instructions.md
-├── .vscode/tasks.json          # Tareas de VS Code
-├── task1.txt                   # (Ejemplo o pruebas)
-└── 📁 bc_server/                # Paquete principal
-    ├── BusinessCentralMCP.py   # Servidor MCP (JSON-RPC) para BC
-    ├── http_server.py          # API REST (FastAPI) con OpenAPI/Swagger
-    ├── setup_guide.py          # Script de validación de entorno y credenciales
-    ├── client.py               # Cliente HTTP para la API de BC
-    ├── config.py               # Carga y validación de configuración
-    └── __init__.py
-```
-
-
-## 🎯 Servidores y APIs Implementados
-
-### **1. BusinessCentralMCP.py - Servidor MCP (JSON-RPC)**
-Expone herramientas para interactuar con Business Central vía JSON-RPC:
-- **get_customers(limit)**: Lista clientes
-- **get_customer_details(customer_id)**: Detalle de un cliente
-- **get_items(limit)**: Lista artículos
-- **get_sales_orders(limit)**: Lista órdenes de venta
-- **create_customer(...)**: Crea un nuevo cliente
-
-### **2. http_server.py - API REST (FastAPI)**
-Expone los mismos métodos anteriores vía HTTP REST, con documentación Swagger/OpenAPI.
-
-### **3. setup_guide.py - Validación de entorno**
-Script para comprobar variables de entorno y conectividad con Azure AD y Business Central.
-
-
-## 🛠️ Tecnologías Utilizadas
-
-- **FastMCP**: Framework para servidores MCP (JSON-RPC)
-- **FastAPI**: API REST moderna con documentación automática
-- **httpx**: Cliente HTTP asíncrono
-- **Pydantic**: Validación y serialización de datos
-- **python-dotenv**: Gestión de variables de entorno
-
-
-## 🚀 Instalación y Puesta en Marcha
-
-### 💻 Entorno Local
-
-### 1. Crear entorno virtual
 ```powershell
+git clone https://github.com/javiarmesto/Lab3_1_MCP_BusinessCentral.git
+cd Lab3_1_MCP_BusinessCentral
 python -m venv .venv
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 ```
 
-### 2. Instalar dependencias
-```powershell
-pip install -r requirements.txt
+Crea un `.env` local (está ignorado por Git), con los nombres que lee [config.py](config.py):
+
+```dotenv
+AZURE_TENANT_ID=<tu-tenant-id>
+AZURE_CLIENT_ID=<tu-application-id>
+AZURE_CLIENT_SECRET=<tu-secreto-local>
+BC_ENVIRONMENT=<tu-sandbox>
+BC_COMPANY_ID=<tu-company-id>
+LOG_LEVEL=INFO
 ```
 
-### 3. Validar entorno y credenciales
-```powershell
-python bc_server/setup_guide.py
-```
+No uses valores de un ZIP histórico. `config.py` construye la URL BC a partir del tenant y del entorno; no consume `BC_BASE_URL`. Revisa con el administrador los permisos de la aplicación y de la compañía.
 
-### 4. Lanzar el servidor MCP (JSON-RPC)
-```powershell
-python -m bc_server.BusinessCentralMCP
-```
+## Entradas disponibles y resultado esperado
 
-### 5. Lanzar la API REST (FastAPI)
-```powershell
-uvicorn bc_server.http_server:app --reload --host 0.0.0.0 --port 8000
-```
-Accede a la documentación interactiva en: http://localhost:8000/docs
+- **STDIO:** `python BusinessCentralMCP.py`, desde la raíz. Los imports son locales (`config`, `client`); no existe el paquete `bc_server/` en el árbol actual. Para un host de escritorio, usa el Python del venv, la ruta absoluta a ese archivo y el directorio de trabajo del repo.
+- **HTTP:** `python http_server.py`. La entrada llama a `FastMCP.run(transport="http", host="0.0.0.0", port=8000)`. Expone herramientas MCP; no se ha encontrado una instancia FastAPI llamada `app`, por lo que no uses `uvicorn bc_server.http_server:app` ni presupongas rutas REST `/customers` o `/docs`.
+- **Otra variante:** [mcp_stm_server.py](mcp_stm_server.py), con `streamable-http`; estudia sus diferencias antes de elegirla.
 
-### ☁️ Despliegue en Azure App Service
+El resultado a comprobar con un cliente MCP es descubrir las herramientas y ejecutar **una lectura** de `get_customers` en tu sandbox. `create_customer` escribe datos: solo úsala para un ejercicio explícito con datos de prueba. La entrada STDIO imprime un banner en stdout antes de iniciar MCP; esto puede interferir con clientes JSON-RPC estrictos y queda pendiente de revisión funcional.
 
-**¿Quieres el servidor disponible online?** Consulta la **[Guía Completa de Despliegue](./DEPLOYMENT_GUIDE.md)** que incluye:
-- Proceso paso a paso para Azure App Service
-- Solución a todos los problemas encontrados
-- Configuración de variables de entorno
-- Scripts de automatización
-- Suite de testing completa
+## Estructura
 
-**Resultado**: Servidor 100% operativo en Azure con integración real a Business Central.
+| Ruta | Contenido |
+|---|---|
+| `BusinessCentralMCP.py`, `http_server.py`, `mcp_stm_server.py` | Variantes MCP |
+| `client.py`, `azure_auth.py`, `config.py` | API BC, OAuth y configuración |
+| `SETUP.md`, `MAPA_RELACIONES.md` | Guías complementarias; contrastar instrucciones históricas con este árbol |
+| `bc_server_bkp/` | Implementación y guía de despliegue históricas; se conserva porque contiene documentación única |
+| `copilot-studio-connector/` | Material del conector |
+| `test_mcp_client.py`, `test-mcp-api.http` | Clientes históricos; revisar sus rutas y destinos antes de ejecutar |
 
-## 🧪 Testing del Servidor Desplegado
+## Empaquetado y límites
 
-El archivo `test-mcp-api.http` contiene una suite completa de tests para validar todas las funcionalidades:
+Se retiran `deploy.zip` y `recent_logs.zip` del árbol actual: son un paquete generado y logs de un despliegue personal, no dependencias del código. El script crea de nuevo `deploy.zip`; ninguna entrada importa esos ZIP. El historial conserva sus copias.
 
-```http
-### Health Check
-GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/health
+**No ejecutes `create_deploy_zip.ps1` con secretos locales:** su recorrido no excluye `.env`, `.git` ni logs. Para estudiar un despliegue, prepara el paquete con una lista explícita de los archivos de la variante elegida y `requirements.txt`; deja configuración, credenciales y logs fuera. El script requiere una corrección separada antes de utilizarse como procedimiento fiable.
 
-### Listar Clientes
-GET https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers?limit=5
+Antes de exponer HTTP, revisa autenticación de entrada, permisos y transporte. La autenticación de esta aplicación frente a BC no acredita que los clientes del servidor estén autenticados. No se han instalado dependencias, arrancado servidores ni ejecutado endpoints durante esta revisión. No se ha confirmado una licencia aplicable.
 
-### Crear Cliente
-POST https://mcp-bc-javi-chb7bue4evbkeyb0.westeurope-01.azurewebsites.net/customers
-Content-Type: application/json
-
-{
-  "displayName": "Cliente Test",
-  "email": "test@example.com"
-}
-```
-
-**Usar REST Client extension** de VS Code para ejecutar los tests directamente desde el editor.
-
-
-## 🔧 Integración con Claude Desktop
-
-1. Localiza el archivo de configuración de Claude Desktop:
-   - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
-   - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-2. Añade una entrada para el servidor MCP de Business Central, por ejemplo:
-   ```json
-   {
-     "mcpServers": {
-       "businesscentral-mcp": {
-         "command": "C:/ruta/completa/.venv/Scripts/python.exe",
-         "args": ["-m", "bc_server.BusinessCentralMCP"]
-       }
-     }
-   }
-   ```
-3. Reinicia Claude Desktop para que detecte el nuevo servidor MCP.
-
-
-## 🛠️ Herramientas Disponibles (BusinessCentralMCP)
-
-| Herramienta              | Descripción                                 | Parámetros principales                |
-|--------------------------|---------------------------------------------|---------------------------------------|
-| get_customers            | Lista clientes de Business Central          | limit (int)                           |
-| get_customer_details     | Detalle de un cliente por ID                | customer_id (str)                     |
-| get_items                | Lista artículos                             | limit (int)                           |
-| get_sales_orders         | Lista órdenes de venta                      | limit (int)                           |
-| create_customer          | Crea un nuevo cliente                       | displayName, email, ... (ver código)  |
-
-Consulta la documentación Swagger en `/docs` si usas la API REST.
-
-
-## 🧪 Testing y Desarrollo
-
-- **Claude Desktop:** Configura el archivo de Claude Desktop y reinicia para probar las herramientas MCP.
-- **Modo desarrollo:** Usa los scripts de la carpeta `bc_server` para pruebas y debugging.
-- **API REST:** Ejecuta `uvicorn bc_server.http_server:app --reload` y prueba los endpoints en `http://localhost:8000/docs`.
-- **VS Code Task:** Usa la tarea "Run Python Script" para lanzar scripts rápidamente.
-
-
-## 🎯 Casos de Uso Demostrados
-
-- Integración MCP con Business Central
-- Exposición de datos de clientes, artículos y órdenes
-- Creación de clientes desde herramientas AI
-- API REST y JSON-RPC para integración flexible
-
-
-
-
-## 📚 Referencias oficiales y recursos útiles
-
-### 📖 Documentación del Proyecto
-
-| Recurso | Descripción |
-|---------|-------------|
-| [Guía de Despliegue Azure](./DEPLOYMENT_GUIDE.md) | Proceso completo para llevar el servidor a producción |
-| [Suite de Tests](./test-mcp-api.http) | Validación completa de endpoints con REST Client |
-| [Configuración MCP](./bc_server/BusinessCentralMCP.py) | Servidor JSON-RPC para integración con AI clients |
-| [API REST](./bc_server/http_server.py) | Endpoints HTTP con documentación OpenAPI |
-
-### 🌐 Enlaces Oficiales de Microsoft
-
-- [MCP servers en Microsoft Learn](https://learn.microsoft.com/en-us/azure/api-management/export-rest-mcp-server#about-mcp-servers)
-- [APIs REST de Business Central](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/webservices/api-overview)
-- [Desarrollar apps conectadas a Business Central](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-develop-connect-apps)
-- [Límites de API en Business Central](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/api-reference/v2.0/dynamics-rate-limits)
-- [Documentación MCP Oficial](https://modelcontextprotocol.io/llms-full.txt)
-- [FastMCP GitHub](https://github.com/jlowin/fastmcp)
-- [Claude Desktop](https://claude.ai/desktop)
-- [Pydantic Docs](https://docs.pydantic.dev/)
-- [Blog TechSphereDynamics](https://techspheredynamics.com)
-
-| Recurso                                    | Enlace                                                                 |
-|--------------------------------------------|------------------------------------------------------------------------|
-| MCP servers en Microsoft Learn             | https://learn.microsoft.com/en-us/azure/api-management/export-rest-mcp-server#about-mcp-servers |
-| APIs REST de Business Central              | https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/webservices/api-overview |
-| Autenticación y apps conectadas            | https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/developer/devenv-develop-connect-apps |
-| Límites de API                             | https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/api-reference/v2.0/dynamics-rate-limits |
-| Documentación MCP Oficial                  | https://modelcontextprotocol.io/llms-full.txt |
-| FastMCP GitHub                             | https://github.com/jlowin/fastmcp |
-| Claude Desktop                             | https://claude.ai/desktop |
-| Pydantic Docs                              | https://docs.pydantic.dev/ |
-| Blog TechSphereDynamics                    | https://techspheredynamics.com |
-
-
-
----
-
-**¡Desarrollado con visión y buen rollo!** 😉
-
-Para cualquier duda, revisa los comentarios en el código o consulta la documentación oficial de MCP.
+[APIs oficiales BC](https://learn.microsoft.com/en-us/dynamics365/business-central/dev-itpro/webservices/api-overview) · [MCP en Microsoft Learn](https://learn.microsoft.com/en-us/azure/api-management/export-rest-mcp-server#about-mcp-servers) · [TechSphereDynamics](https://techspheredynamics.com).
